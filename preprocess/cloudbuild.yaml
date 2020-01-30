@@ -1,0 +1,16 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+args:
+  - '-c'
+  - |
+    docker pull gcr.io/$PROJECT_ID/customerchurn/preprocess:latest || exit 0
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/customerchurn/preprocess:latest'
+      - '--cache-from'
+      - 'gcr.io/$PROJECT_ID/customerchurn/preprocess:latest'
+      - 'preprocess/'
+images: ['gcr.io/$PROJECT_ID/customerchurn/preprocess:latest']

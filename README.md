@@ -1,0 +1,1 @@
+Sample TF model that predicts fuel efficiency. This will be used in Kubeflow

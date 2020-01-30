@@ -1,0 +1,57 @@
+apiVersion: "kubeflow.org/v1alpha3"
+kind: Experiment
+metadata:
+  namespace: kubeflow
+  name: tfjob-example
+spec:
+  parallelTrialCount: 3
+  maxTrialCount: 12
+  maxFailedTrialCount: 3
+  objective:
+    type: maximize
+    goal: 0.99
+    objectiveMetricName: accuracy
+  algorithm:
+    algorithmName: random
+  metricsCollectorSpec:
+    source:
+      fileSystemPath:
+        path: /tmp
+        kind: Directory
+    collector:
+      kind: TensorFlowEvent
+  parameters:
+    - name: --learning_rate
+      parameterType: double
+      feasibleSpace:
+        min: "0.002"
+        max: "0.005"
+  trialTemplate:
+    goTemplate:
+      rawTemplate: |-
+        apiVersion: "kubeflow.org/v1"
+        kind: TFJob
+        metadata:
+          name: {{.Trial}}
+          namespace: {{.NameSpace}}
+        spec:
+         tfReplicaSpecs:
+          Worker:
+            replicas: 1
+            restartPolicy: OnFailure
+            template:
+              spec:
+                containers:
+                  - name: tensorflow
+                    image: gcr.io/kb-poc-262417/mnist/katib/train:latest
+                    imagePullPolicy: Always
+                    command:
+                      - "python"
+                      - "/train.py"
+                      - "--epoch 1"
+                      - "--log_dir=/tmp/metrics"
+                      {{- with .HyperParameters}}
+                      {{- range .}}
+                      - "{{.Name}}={{.Value}}"
+                      {{- end}}
+                      {{- end}}
