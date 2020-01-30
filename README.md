@@ -1,1 +1,1 @@
-Sample TF model that predicts fuel efficiency. This will be used in Kubeflow
+TF Customer Churn prediction model running on Kubeflow and K8s
