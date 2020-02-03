@@ -59,7 +59,7 @@ def train(bucket_name, epochs=10, batch_size=128):
     predictions = dnn.predict(testX)
 
     pred = np.argmax(predictions, axis=1)
-
+    preddy = pred.reshape(pred.shape[0],)
     model = save_model_metadata(exec, batch_size, epochs)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
@@ -71,7 +71,7 @@ def train(bucket_name, epochs=10, batch_size=128):
 
     save_tfmodel_in_gcs(bucket_name, dnn)
 
-    df = pd.DataFrame({'target': testy, 'predicted': pred}, columns=['target', 'predicted'])
+    df = pd.DataFrame({'target': testy.to_numpy().reshape(testy.shape[0],), 'predicted': preddy}, columns=['target', 'predicted'])
     df = df.applymap(np.int64)
 
     create_kf_visualization(bucket_name, df, test_acc)
