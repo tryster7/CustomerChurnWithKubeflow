@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Kubeflow Pipelines MNIST example
+Kubeflow Pipelines CUstomerChurn example
 
 Run this script to compile pipeline
 """
@@ -31,9 +31,22 @@ platform = 'GCP'
 def customer_churn_pipeline(gs_bucket='gs://your-bucket/export',
                             epochs=10,
                             batch_size=128,
+                            input_data_file='gs://your-bucket/export',
+                            output_data_dir='gs://your-bucket/output',
                             model_dir='gs://your-bucket/export',
                             model_name='dummy',
                             server_name='dummy'):
+    preprocess_args = [
+        '--bucket_name', gs_bucket,
+        '--input-file', input_data_file,
+        '--output_folder', output_data_dir,
+        '--batch_size', batch_size
+    ]
+    preprocess = dsl.ContainerOp(
+        name='train',
+        image='gcr.io/kube-2020/customerchurn/preprocess:latest',
+        arguments=preprocess_args
+    )
     train_args = [
         '--bucket_name', gs_bucket,
         '--epochs', epochs,
@@ -44,27 +57,24 @@ def customer_churn_pipeline(gs_bucket='gs://your-bucket/export',
         image='gcr.io/kube-2020/customerchurn/train:latest',
         arguments=train_args
     )
-
     serve_args = [
         '--model_path', model_dir,
         '--model_name', model_name,
         '--server_name', server_name
     ]
-
     serve = dsl.ContainerOp(
         name='serve',
-        image='gcr.io/kube-2020/customerchurn/pipeline/deployer:latest',
+        image='gcr.io/kube-2020/customerchurn/serve:latest',
         arguments=serve_args
     )
-
-    steps = [train, serve]
+    steps = [preprocess, train, serve]
     for step in steps:
         step.apply(gcp.use_gcp_secret('user-gcp-sa'))
 
+    train.after(preprocess)
     serve.after(train)
 
 
 if __name__ == '__main__':
     import kfp.compiler as compiler
-
     compiler.Compiler().compile(customer_churn_pipeline, __file__ + '.tar.gz')

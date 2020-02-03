@@ -6,7 +6,6 @@ import pandas as pd
 from google.cloud import storage
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
 
 
 def parse_arguments():
@@ -33,7 +32,7 @@ def parse_arguments():
 def preprocess(input_file, output_folder, bucket_name):
     input_file = bucket_name + '/' + input_file
 
-    raw_dataset = pd.read_csv('Customer_Churn_Modelling.csv')
+    raw_dataset = pd.read_csv(input_file)
     dataset = raw_dataset.copy()
     dataset = dataset.dropna()
     X = dataset.drop(labels=['CustomerId', 'Surname', 'RowNumber', 'Exited'], axis=1)
@@ -44,45 +43,27 @@ def preprocess(input_file, output_folder, bucket_name):
     X['Gender'] = label.fit_transform(X['Gender'])
     X = pd.get_dummies(X, drop_first=True, columns=['Geography'])
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0, stratify=y)
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
 
-    # normalize data
+    train_stats = X_train.describe()
+    train_stats = train_stats.transpose()
+
+    print("normalize data...")
+    normed_train_data = (norm(X_train, train_stats))
+    normed_test_data = (norm(X_test, train_stats))
 
     train_output_file = bucket_name + '/' + output_folder + '/train.csv'
     train_label_file = bucket_name + '/' + output_folder + '/train_label.csv'
     test_output_file = bucket_name + '/' + output_folder + '/test.csv'
     test_label_file = bucket_name + '/' + output_folder + '/test_label.csv'
 
-    print('About to write the training data')
-    print(X_train.shape)
-
-    # X_train.to_csv(train_output_file)
-    # y_train.to_csv(test_output_file)
-    # X_test.to_csv(train_label_file)
-    # y_test.to_csv(test_label_file)
-
-    X_train.to_csv("train.csv")
-    y_train.to_csv("test.csv")
-    X_test.to_csv("train_label.csv")
-    y_test.to_csv("test_label.csv")
-
-    # uploadToGCS(normed_train_data, "train.csv", bucket_name)
-    # uploadToGCS(normed_test_data, "test.csv", bucket_name)
+    normed_train_data.to_csv(train_output_file)
+    normed_test_data.to_csv(test_output_file)
+    y_train.to_csv(train_label_file)
+    y_test.to_csv(test_label_file)
 
 
-def upload_to_gcs(df, fileName, bucket_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(fileName)
-    blob.upload_from_string(df.to_csv(), 'text/csv')
-    print(
-        "File {} uploaded to {}.".format(
-            fileName, bucket
-        )
-    )
+def norm(x, train_stats):
+    return (x - train_stats['mean']) / train_stats['std']
 
 
 if __name__ == '__main__':

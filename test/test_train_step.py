@@ -25,7 +25,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_correct_model_optimizer_and_loss(self):
         self.assertEquals(self.model.loss, 'binary_crossentropy')
-        self.assertIn('Adam', self.model.optimizer.get_config())
+        self.assertIn('Adam', self.model.optimizer.get_config().values())
 
     def test_layers_in_model(self):
         self.assertEquals(len(self.model.layers), 3)

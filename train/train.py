@@ -167,7 +167,7 @@ def save_model_metadata(exec, batch_size, epochs):
             },
             hyperparameters={
                 "learning_rate": 0.5,
-                "layers": [28, 28, 1],
+                "layers": [11, 128, 1],
                 "epochs": str(epochs),
                 "batch-size": str(batch_size),
                 "early_stop": True
