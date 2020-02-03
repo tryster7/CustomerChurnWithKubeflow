@@ -45,7 +45,7 @@ def parse_arguments():
 
 def train(bucket_name, epochs=10, batch_size=128):
     exec = create_metadata_execution()
-    testX, testy, trainX, trainy = load_and_normalize_data()
+    testX, testy, trainX, trainy = load_and_normalize_data(bucket_name)
     dnn = create_tfmodel(
         optimizer=tf.optimizers.Adam(),
         loss='binary_crossentropy',
