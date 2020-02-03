@@ -38,12 +38,11 @@ def customer_churn_pipeline(gs_bucket='gs://your-bucket/export',
                             server_name='dummy'):
     preprocess_args = [
         '--bucket_name', gs_bucket,
-        '--input-file', input_data_file,
-        '--output_folder', output_data_dir,
-        '--batch_size', batch_size
+        '--input_file', input_data_file,
+        '--output_folder', output_data_dir
     ]
     preprocess = dsl.ContainerOp(
-        name='train',
+        name='preprocess',
         image='gcr.io/kube-2020/customerchurn/preprocess:latest',
         arguments=preprocess_args
     )
