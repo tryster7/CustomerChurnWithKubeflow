@@ -23,5 +23,4 @@ steps:
       - '--cache-from'
       - 'gcr.io/$PROJECT_ID/customerchurn/train:latest'
       - 'train/'
-    images: ['gcr.io/$PROJECT_ID/customerchurn/train:latest']
-
+images: ['gcr.io/$PROJECT_ID/customerchurn/train:latest']
