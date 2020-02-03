@@ -9,11 +9,12 @@ class MyTestCase(unittest.TestCase):
     def setUp(self) -> None:
         model = train.create_tfmodel(optimizer=tf.optimizers.Adam(),
                                      loss='binary_crossentropy',
-                                     metrics=['accuracy'])
+                                     metrics=['accuracy'],
+                                     input_dim=11)
         self.model = model
 
     def test_loadmodel_and_predict(self):
-        model = tf.saved_model.load('gs://kube-1122/export/model/1')
+        model = tf.saved_model.load('gs://kube-1122/customerchurn/export/model/1')
         # predictions = model.predict(self.trainX[0])
         # label = np.argmax(predictions, axis=1)
         # print(label)
@@ -31,7 +32,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(self.model.layers), 3)
 
     def test_model_output(self):
-        self.assertEquals(self.model.output.name, 'dense_3/Softmax:0')
+        self.assertEquals(self.model.output.name, 'dense_14/Identity:0')
 
     def test_model_is_saved_at_given_dir(self):
         export_dir = '/workspace'

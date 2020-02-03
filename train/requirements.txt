@@ -3,3 +3,6 @@ tensorflow
 google-cloud
 google-cloud-storage
 gcsfs
+scikit-learn
+nose2
+kubeflow-metadata

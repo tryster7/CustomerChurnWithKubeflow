@@ -50,7 +50,7 @@ def train(bucket_name, epochs=10, batch_size=128):
         optimizer=tf.optimizers.Adam(),
         loss='binary_crossentropy',
         metrics=['accuracy'],
-        train_df=trainX)
+        input_dim=trainX.shape[1])
 
     dnn.summary()
 
@@ -82,9 +82,9 @@ def save_tfmodel_in_gcs(bucket_name, model):
     tf.saved_model.save(model, export_dir=export_path)
 
 
-def create_tfmodel(optimizer, loss, metrics, train_df):
+def create_tfmodel(optimizer, loss, metrics, input_dim):
     model = Sequential()
-    model.add(Dense(train_df.shape[1], activation='relu', input_dim=train_df.shape[1]))
+    model.add(Dense(input_dim, activation='relu', input_dim=input_dim))
     model.add(Dense(128, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(optimizer, loss, metrics)
