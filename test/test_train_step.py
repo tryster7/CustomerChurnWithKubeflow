@@ -30,7 +30,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEquals(len(self.model.layers), 3)
 
     def test_model_output(self):
-        self.assertEquals(self.model.output.name, 'dense_14/Identity:0')
+        self.assertEquals(self.model.output.name, 'dense_11/Identity:0')
 
     def test_model_is_saved_at_given_dir(self):
         export_dir = '/workspace'
