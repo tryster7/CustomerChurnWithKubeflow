@@ -3,3 +3,4 @@ tensorflow
 google-cloud
 google-cloud-storage
 gcsfs
+scikit-learn
