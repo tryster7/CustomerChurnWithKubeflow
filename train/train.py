@@ -55,21 +55,18 @@ def train(bucket_name, epochs=10, batch_size=128):
         input_dim=trainX.shape[1])
 
     dnn.summary()
-
+    
     dnn.fit(trainX, trainy, epochs=epochs, batch_size=batch_size)
-
-    predictions = dnn.predict(testX)
-
-    pred = np.argmax(predictions, axis=1)
-    preddy = pred.reshape(pred.shape[0],)
     
     # model = save_model_metadata(exec, batch_size, epochs)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
-
-    #printing for katib hyperparameter tuning
     print("Validation-accuracy={:.2f}".format(test_acc))
     print("test-loss={:.2f}".format(test_loss))
+    
+    predictions = dnn.predict(testX)
+    pred = np.argmax(predictions, axis=1)
+    preddy = pred.reshape(pred.shape[0],)
     
     # save_metric_metadata(exec, model, test_acc, test_loss)
 
