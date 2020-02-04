@@ -29,7 +29,7 @@ def parse_arguments():
     parser.add_argument('--bucket_name',
                         type=str,
                         default='gs://kube-1122/customerchurn',
-                        help='The bucket where the output has to be stored')
+                        help='The bucket where the model has to be stored')
     parser.add_argument('--epochs',
                         type=int,
                         default=1,
@@ -45,7 +45,7 @@ def parse_arguments():
 
 def train(bucket_name, epochs=10, batch_size=128):
     
-    #exec = create_metadata_execution()
+    exec = create_metadata_execution()
     
     testX, testy, trainX, trainy = load_and_normalize_data(bucket_name)
     dnn = create_tfmodel(
@@ -63,7 +63,7 @@ def train(bucket_name, epochs=10, batch_size=128):
     pred = np.argmax(predictions, axis=1)
     preddy = pred.reshape(pred.shape[0],)
     
-    #model = save_model_metadata(exec, batch_size, epochs)
+    model = save_model_metadata(exec, batch_size, epochs)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
 
@@ -71,7 +71,7 @@ def train(bucket_name, epochs=10, batch_size=128):
     print("Validation-accuracy={:.2f}".format(test_acc))
     print("test-loss={:.2f}".format(test_loss))
     
-    #save_metric_metadata(exec, model, test_acc, test_loss)
+    save_metric_metadata(exec, model, test_acc, test_loss)
 
     save_tfmodel_in_gcs(bucket_name, dnn)
 
@@ -146,7 +146,7 @@ def save_metric_metadata(exec, model, test_acc, test_loss):
             name="Customer_Churn_Evaluation",
             description="Predicting customer churn from given data",
             owner="demo@kubeflow.org",
-            uri="[REFERENCE URL]",
+            uri="gs://kube-1122/customerchurn/metadata/cm.csv",
             model_id=str(model.id),
             metrics_type=metadata.Metrics.VALIDATION,
             values={"accuracy": str(test_acc),
@@ -163,7 +163,7 @@ def save_model_metadata(exec, batch_size, epochs):
             name="Customer_Churn",
             description="model to predict customer churn",
             owner="demo@kubeflow.org",
-            uri="[REFERENCE PATH]",
+            uri="gs://kube-1122/customerchurn/export/model/1/saved_model.pb",
             model_type="DNN",
             training_framework={
                 "name": "tensorflow",
