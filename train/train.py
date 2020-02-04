@@ -44,7 +44,7 @@ def parse_arguments():
 
 
 def train(bucket_name, epochs=10, batch_size=128):
-    exec = create_metadata_execution()
+    #exec = create_metadata_execution()
     testX, testy, trainX, trainy = load_and_normalize_data(bucket_name)
     dnn = create_tfmodel(
         optimizer=tf.optimizers.Adam(),
@@ -60,14 +60,14 @@ def train(bucket_name, epochs=10, batch_size=128):
 
     pred = np.argmax(predictions, axis=1)
     preddy = pred.reshape(pred.shape[0],)
-    model = save_model_metadata(exec, batch_size, epochs)
+    #model = save_model_metadata(exec, batch_size, epochs)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
 
     print("\n Test Accuracy is {} ".format(test_acc))
     print("\n Test Loss is {} ".format(test_loss))
 
-    save_metric_metadata(exec, model, test_acc, test_loss)
+    #save_metric_metadata(exec, model, test_acc, test_loss)
 
     save_tfmodel_in_gcs(bucket_name, dnn)
 
