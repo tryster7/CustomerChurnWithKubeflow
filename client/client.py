@@ -1,26 +1,30 @@
 import sys
 import json
 import requests
-from keras.datasets import fashion_mnist
+import pandas as pd
+from google.cloud import storage
 
 
-def get_prediction(server_host='127.0.0.1', server_port=9000):
-    (trainX, trainy), (testX, testy) = fashion_mnist.load_data()
-    testX = testX / 255
-    testX = testX.reshape(testX.shape[0], 28, 28, 1)
-    data = json.dumps({"signature_name": "serving_default", "instances": testX[0:3].tolist()})
+def get_prediction(server_host='127.0.0.1', server_port=8500, model_name='ccd'):
+    testX = pd.read_csv("gs://kube-1122/customerchurn/output/test.csv")
+    testX = testX.drop(testX.columns[0], axis=1)
+    print(testX.head())
+    testy = pd.read_csv("gs://kube-1122/customerchurn/output/test_label.csv")
+    testX = testy.drop(testy.columns[0], axis=1)
+    print("predictions ...\n" , testy.head())
+    data = json.dumps({"signature_name": "serving_default", "instances": testX[0:5].values.tolist()})
     headers = {"content-type": "application/json"}
-    json_response = requests.post('http://' + server_host + ':' + str(server_port) + '/v1/models/demo:predict',
+    json_response = requests.post('http://' + server_host + ':' + str(server_port) + '/v1/models/' + str(model_name) + ':predict',
                                   data=data, headers=headers)
     print(json_response)
     print(json.loads(json_response.text))
-    # predictions = json.loads(json_response.text['predictions')
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print("Usage: client server_host server_port ")
         sys.exit(-1)
     server_host = sys.argv[1]
     server_port = int(sys.argv[2])
+    model_name = sys.argv[3]
     get_prediction(server_host=server_host, server_port=server_port)
