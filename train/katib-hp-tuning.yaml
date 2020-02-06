@@ -2,15 +2,15 @@ apiVersion: "kubeflow.org/v1alpha3"
 kind: Experiment
 metadata:
   namespace: kubeflow
-  name: ccc-12-hp
+  name: ccc-hp-{{.Trial}}
 spec:
   metricsCollector:
     collector:
       kind: StdOut
   objective:
     type: maximize
-    goal: 0.99
-    objectiveMetricName: Validation-accuracy
+    goal: 0.95
+    objectiveMetricName: accuracy
     additionalMetricNames:
       - test-loss
   algorithm:
