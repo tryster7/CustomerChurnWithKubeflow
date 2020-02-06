@@ -49,7 +49,8 @@ def parse_arguments():
 
 def train(bucket_name, epochs=10, batch_size=128, katib=0):
     
-    exec = create_metadata_execution()
+    if(katib==0):
+        exec = create_metadata_execution()
     
     testX, testy, trainX, trainy = load_and_normalize_data(bucket_name)
     dnn = create_tfmodel(
@@ -62,7 +63,8 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     
     dnn.fit(trainX, trainy, epochs=epochs, batch_size=batch_size)
     
-    model = save_model_metadata(exec, batch_size, epochs)
+    if(katib==0):
+        model = save_model_metadata(exec, batch_size, epochs)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
     print("accuracy={}".format(test_acc))
@@ -70,7 +72,8 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     
     predictions = dnn.predict_classes(testX)
     
-    save_metric_metadata(exec, model, test_acc, test_loss)
+    if(katib==0):
+        save_metric_metadata(exec, model, test_acc, test_loss)
     
     if(katib==0):
         save_tfmodel_in_gcs(bucket_name, dnn)
