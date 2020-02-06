@@ -64,18 +64,13 @@ def train(bucket_name, epochs=10, batch_size=128):
     print("accuracy={}".format(test_acc))
     print("test-loss={}".format(test_loss))
     
-    predictions = dnn.predict(testX)
-    pred = np.argmax(predictions, axis=1)
-    preddy = pred.reshape(pred.shape[0],)
+    predictions = dnn.predict_classes(testX)
     
     # save_metric_metadata(exec, model, test_acc, test_loss)
 
     save_tfmodel_in_gcs(bucket_name, dnn)
-
-    df = pd.DataFrame({'target': testy.to_numpy().reshape(testy.shape[0],), 'predicted': preddy}, columns=['target', 'predicted'])
-    df = df.applymap(np.int64)
-
-    create_kf_visualization(bucket_name, df, test_acc)
+    
+    create_kf_visualization(bucket_name, testy, predictions, test_acc)
 
 
 def save_tfmodel_in_gcs(bucket_name, model):
@@ -92,7 +87,7 @@ def create_tfmodel(optimizer, loss, metrics, input_dim):
     return model
 
 
-def create_kf_visualization(bucket_name, df, test_acc):
+def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
     metrics = {
         'metrics': [{
             'name': 'accuracy-score',
@@ -104,8 +99,11 @@ def create_kf_visualization(bucket_name, df, test_acc):
     with file_io.FileIO('/mlpipeline-metrics.json', 'w') as f:
         json.dump(metrics, f)
 
-    vocab = list(df['target'].unique())
-    cm = confusion_matrix(df['target'], df['predicted'], labels=vocab)
+    test = test_label.to_frame('target')
+    pred = pd.DataFrame(data=predict_label, columns=['predicted'])
+
+    vocab = list(test['target'].unique())
+    cm = confusion_matrix(test['target'], pred['predicted'], labels=vocab)
     data = []
     for target_index, target_row in enumerate(cm):
         for predicted_index, count in enumerate(target_row):
