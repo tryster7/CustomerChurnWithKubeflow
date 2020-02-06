@@ -12,8 +12,7 @@ class MyTestCase(unittest.TestCase):
                                      metrics=['accuracy'],
                                      input_dim=11)
         self.model = model
-    
-    @unittest.skip("skipping until actual model exist")
+
     def test_loadmodel_and_predict(self):
         model = tf.saved_model.load('gs://kube-1122/customerchurn/export/model/1')
         self.assertIsNotNone(model)
@@ -21,6 +20,7 @@ class MyTestCase(unittest.TestCase):
     def test_parseArguments(self):
         args = train.parse_arguments()
         self.assertIn("epochs", args)
+        self.assertIn("batch_size", args)
 
     def test_correct_model_optimizer_and_loss(self):
         self.assertEquals(self.model.loss, 'binary_crossentropy')

@@ -53,7 +53,7 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
 
     testX, testy, trainX, trainy = load_and_normalize_data(bucket_name)
     dnn = create_tfmodel(
-        optimizer=tf.optimizers.SGD(nesterov=True),
+        optimizer=tf.optimizers.Adam(),
         loss='binary_crossentropy',
         metrics=['accuracy'],
         input_dim=trainX.shape[1])
@@ -63,8 +63,8 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     dnn.fit(trainX, trainy, epochs=epochs, batch_size=batch_size)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
-    print("accuracy={}".format(test_acc))
-    print("test-loss={}".format(test_loss))
+    print("accuracy={:.2f}".format(test_acc))
+    print("test-loss={:.2f}".format(test_loss))
 
     predictions = dnn.predict_classes(testX)
 
