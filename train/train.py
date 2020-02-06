@@ -38,12 +38,16 @@ def parse_arguments():
                         type=int,
                         default=64,
                         help='the batch size for each epoch')
+     parser.add_argument('--katib',
+                        type=int,
+                        default=0,
+                        help='to save model or not')
 
     args = parser.parse_known_args()[0]
     return args
 
 
-def train(bucket_name, epochs=10, batch_size=128):
+def train(bucket_name, epochs=10, batch_size=128, katib=0):
     
     exec = create_metadata_execution()
     
@@ -67,8 +71,9 @@ def train(bucket_name, epochs=10, batch_size=128):
     predictions = dnn.predict_classes(testX)
     
     save_metric_metadata(exec, model, test_acc, test_loss)
-
-    save_tfmodel_in_gcs(bucket_name, dnn)
+    
+    if(katib==0)
+        save_tfmodel_in_gcs(bucket_name, dnn)
     
     create_kf_visualization(bucket_name, testy, predictions, test_acc)
 
