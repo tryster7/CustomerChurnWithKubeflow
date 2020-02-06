@@ -101,7 +101,7 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
 
     pred = pd.DataFrame(data=predict_label, columns=['predicted'])
 
-    vocab = list(test_label.unique())
+    vocab = [0,1]
     cm = confusion_matrix(test_label, pred['predicted'], labels=vocab)
     data = []
     for target_index, target_row in enumerate(cm):
