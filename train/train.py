@@ -51,7 +51,7 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     if katib == 0:
         metadata_exec = create_metadata_execution()
 
-    testX, testy, trainX, trainy = load_and_normalize_data(bucket_name)
+    testX, testy, trainX, trainy = load_data(bucket_name)
     dnn = create_tfmodel(
         optimizer=tf.optimizers.Adam(),
         loss='binary_crossentropy',
@@ -111,7 +111,7 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
             data.append((vocab[target_index], vocab[predicted_index], count))
     df_cm = pd.DataFrame(data, columns=['target', 'predicted', 'count'])
     cm_file = bucket_name + '/metadata/cm.csv'
-
+    print(df_cm)
     with file_io.FileIO(cm_file, 'w') as f:
         df_cm.to_csv(f, columns=['target', 'predicted', 'count'], header=False, index=False)
 
@@ -133,6 +133,8 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
 
     with file_io.FileIO('/mlpipeline-ui-metadata.json', 'w') as f:
         json.dump(metadata, f)
+
+    return df_cm
 
 
 def save_metric_metadata(exec, model, test_acc, test_loss):
@@ -200,7 +202,7 @@ def create_metadata_execution():
     return exec
 
 
-def load_and_normalize_data(bucket_name):
+def load_data(bucket_name):
     # load dataset
     train_file = bucket_name + '/output/train.csv'
     test_file = bucket_name + '/output/test.csv'
