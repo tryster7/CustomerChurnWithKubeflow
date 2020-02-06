@@ -38,7 +38,7 @@ def parse_arguments():
                         type=int,
                         default=64,
                         help='the batch size for each epoch')
-     parser.add_argument('--katib',
+    parser.add_argument('--katib',
                         type=int,
                         default=0,
                         help='to save model or not')
@@ -72,7 +72,7 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     
     save_metric_metadata(exec, model, test_acc, test_loss)
     
-    if(katib==0)
+    if(katib==0):
         save_tfmodel_in_gcs(bucket_name, dnn)
     
     create_kf_visualization(bucket_name, testy, predictions, test_acc)
@@ -148,8 +148,7 @@ def save_metric_metadata(exec, model, test_acc, test_loss):
             uri="gs://kube-1122/customerchurn/metadata/cm.csv",
             model_id=str(model.id),
             metrics_type=metadata.Metrics.VALIDATION,
-            values={"accuracy": str(test_acc),
-                    "test_loss": str(test_loss)},
+            values={"accuracy": str(test_acc)},
             labels={"mylabel": "l1"}))
     print("Metrics id is %s" % metrics.id)
 
