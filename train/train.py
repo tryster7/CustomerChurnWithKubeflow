@@ -48,37 +48,30 @@ def parse_arguments():
 
 
 def train(bucket_name, epochs=10, batch_size=128, katib=0):
-    
-    if(katib==0):
-        exec = create_metadata_execution()
-    
+    if katib == 0:
+        metadata_exec = create_metadata_execution()
+
     testX, testy, trainX, trainy = load_and_normalize_data(bucket_name)
     dnn = create_tfmodel(
-        optimizer=tf.optimizers.Adam(),
+        optimizer=tf.optimizers.SGD(nesterov=True),
         loss='binary_crossentropy',
         metrics=['accuracy'],
         input_dim=trainX.shape[1])
 
     dnn.summary()
-    
+
     dnn.fit(trainX, trainy, epochs=epochs, batch_size=batch_size)
-    
-    if(katib==0):
-        model = save_model_metadata(exec, batch_size, epochs)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
     print("accuracy={}".format(test_acc))
     print("test-loss={}".format(test_loss))
-    
+
     predictions = dnn.predict_classes(testX)
-    
-    if(katib==0):
-        save_metric_metadata(exec, model, test_acc, test_loss)
-    
-    if(katib==0):
+
+    if katib == 0:
+        model = save_model_metadata(metadata_exec, batch_size, epochs)
+        save_metric_metadata(metadata_exec, model, test_acc, test_loss)
         save_tfmodel_in_gcs(bucket_name, dnn)
-        
-    if(katib==0):
         create_kf_visualization(bucket_name, testy, predictions, test_acc)
 
 
@@ -110,7 +103,7 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
 
     pred = pd.DataFrame(data=predict_label, columns=['predicted'])
 
-    vocab = [0,1]
+    vocab = [0, 1]
     cm = confusion_matrix(test_label, pred['predicted'], labels=vocab)
     data = []
     for target_index, target_row in enumerate(cm):
