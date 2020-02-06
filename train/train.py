@@ -77,8 +77,9 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     
     if(katib==0):
         save_tfmodel_in_gcs(bucket_name, dnn)
-    
-    create_kf_visualization(bucket_name, testy, predictions, test_acc)
+        
+    if(katib==0):
+        create_kf_visualization(bucket_name, testy, predictions, test_acc)
 
 
 def save_tfmodel_in_gcs(bucket_name, model):
