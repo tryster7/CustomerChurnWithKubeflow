@@ -61,8 +61,8 @@ def train(bucket_name, epochs=10, batch_size=128):
     # model = save_model_metadata(exec, batch_size, epochs)
 
     test_loss, test_acc = dnn.evaluate(testX, testy, verbose=2)
-    print("Validation-accuracy={:.2f}".format(test_acc))
-    print("test-loss={:.2f}".format(test_loss))
+    print("accuracy={}".format(test_acc))
+    print("test-loss={}".format(test_loss))
     
     predictions = dnn.predict(testX)
     pred = np.argmax(predictions, axis=1)
