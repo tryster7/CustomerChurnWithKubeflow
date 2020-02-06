@@ -230,4 +230,4 @@ if __name__ == '__main__':
 
     args = parse_arguments()
     print(args)
-    train(args.bucket_name, int(args.epochs), int(args.batch_size))
+    train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib))
