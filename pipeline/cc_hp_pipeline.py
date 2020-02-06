@@ -22,8 +22,20 @@ import kfp.gcp as gcp
 import json
 
 from kfp import components
+from kfp.components import func_to_container_op
 
 platform = 'GCP'
+
+
+def convert_hp_results(experiment_result) -> str:
+    import json
+    r = json.loads(experiment_result)
+    args = []
+    for hp in r:
+        print(hp)
+        args.append("%s=%s" % (hp["name"], hp["value"]))
+
+    return " ".join(args)
 
 
 @dsl.pipeline(
@@ -48,8 +60,7 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
     algorithmConfig = {"algorithmName": "random"}
     parameters = [
         {"name": "--epochs", "parameterType": "int", "feasibleSpace": {"min": "4", "max": "20"}},
-        {"name": "--batch_size", "parameterType": "int", "feasibleSpace": {"min": "20", "max": "200"}},
-        # {"name": "--optimizer", "parameterType": "categorical", "feasibleSpace": {"list": ["sgd", "adam", "ftrl"]}}
+        {"name": "--batch_size", "parameterType": "int", "feasibleSpace": {"min": "20", "max": "200"}}
     ]
     rawTemplate = {
         "apiVersion": "batch/v1",
@@ -87,23 +98,24 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
         }
     }
 
-    hypertune = katib_experiment_launcher_op(
-        model_name,
-        "kubeflow",
-        parallelTrialCount=3,
-        maxTrialCount=12,
-        objectiveConfig=str(objectiveConfig),
-        algorithmConfig=str(algorithmConfig),
-        trialTemplate=str(trialTemplate),
-        parameters=str(parameters)
-    )
+    katib_experiment_launcher_op = components.load_component_from_url(
+        'https://raw.githubusercontent.com/kubeflow/pipelines/master/components/kubeflow/katib-launcher/component.yaml')
 
-    op_out = dsl.ContainerOp(
-        name="hp-tuning-output",
-        image="library/bash:4.4.23",
-        command=["sh", "-c"],
-        arguments=["echo hyperparameter: %s" % hypertune.output],
-    )
+    hptune = katib_experiment_launcher_op(
+        experiment_name=model_name,
+        experiment_namespace="kubeflow",
+        parallel_trial_count=3,
+        max_trial_count=12,
+        objective=str(objectiveConfig),
+        algorithm=str(algorithmConfig),
+        trial_template=str(trialTemplate),
+        parameters=str(parameters),
+        metrics_collector=str(metricsCollectorSpec),
+        delete_finished_experiment=False)
+
+    convert_op = func_to_container_op(convert_hp_results)
+    op2 = convert_op(hptune.output)
+    print(op2.output)
 
     preprocess_args = [
         '--bucket_name', gs_bucket,
@@ -135,50 +147,12 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
         image='gcr.io/kube-2020/customerchurn/serve:latest',
         arguments=serve_args
     )
-    steps = [preprocess, train, serve, hypertune, op_out]
+    steps = [preprocess, train, serve, hptune]
     for step in steps:
         step.apply(gcp.use_gcp_secret('user-gcp-sa'))
 
-    hypertune.after(preprocess)
-    op_out.after(hypertune)
-    train.after(op_out)
+    train.after(preprocess)
     serve.after(train)
-
-
-def katib_experiment_launcher_op(
-        name,
-        namespace,
-        maxTrialCount=100,
-        parallelTrialCount=3,
-        maxFailedTrialCount=3,
-        objectiveConfig='{}',
-        algorithmConfig='{}',
-        metricsCollector='{}',
-        trialTemplate='{}',
-        parameters='[]',
-        experimentTimeoutMinutes=60,
-        deleteAfterDone=False,
-        outputFile='/hp_output.txt'):
-    return dsl.ContainerOp(
-        name="ccchurn-hpo",
-        image='gcr.io/kube-2020/customerchurn/train:latest',
-        arguments=[
-            '--name', name,
-            '--namespace', namespace,
-            '--maxTrialCount', maxTrialCount,
-            '--maxFailedTrialCount', maxFailedTrialCount,
-            '--parallelTrialCount', parallelTrialCount,
-            '--objectiveConfig', objectiveConfig,
-            '--algorithmConfig', algorithmConfig,
-            '--metricsCollector', metricsCollector,
-            '--trialTemplate', trialTemplate,
-            '--parameters', parameters,
-            '--outputFile', outputFile,
-            '--deleteAfterDone', deleteAfterDone,
-            '--experimentTimeoutMinutes', experimentTimeoutMinutes,
-        ],
-        file_outputs={'bestHyperParameter': outputFile}
-    )
 
 
 if __name__ == '__main__':
