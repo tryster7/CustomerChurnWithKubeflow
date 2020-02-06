@@ -99,11 +99,10 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
     with file_io.FileIO('/mlpipeline-metrics.json', 'w') as f:
         json.dump(metrics, f)
 
-    test = test_label.to_frame('target')
     pred = pd.DataFrame(data=predict_label, columns=['predicted'])
 
-    vocab = list(test['target'].unique())
-    cm = confusion_matrix(test['target'], pred['predicted'], labels=vocab)
+    vocab = list(test_label.unique())
+    cm = confusion_matrix(test_label, pred['predicted'], labels=vocab)
     data = []
     for target_index, target_row in enumerate(cm):
         for predicted_index, count in enumerate(target_row):
