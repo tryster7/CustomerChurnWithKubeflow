@@ -48,6 +48,24 @@ def parse_arguments():
     return parser
 
 '''
+This method will parse the arguments passed and validate them
+
+Parameters
+----------
+parser          Parser object
+
+Returns 
+-------
+args            Parsed arguments
+
+'''
+def validate_arguments(parser):
+    args = parser.parse_known_args()[0]
+    assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs) 
+    assert args.batch_size > 0, "Invalid batch size {} provided".format(args.batch_size)
+    return args
+    
+'''
 This function involves reading the data from the bucket, 
 creating the model, 
 training the model,
@@ -111,7 +129,13 @@ optimizer:      The optimizer to be used for training the model
 loss:           The loss function to be used for optimizing the model
 metrics:        Metrics to be used for optimization
 input_dim:      The dimension of the input layer. Or we can say the number of attributes in the data file
+
+Returns
+---------
+model           The model instance created
+
 '''
+
 def create_tfmodel(optimizer, loss, metrics, input_dim):
     model = Sequential()
     model.add(Dense(input_dim, activation='relu', input_dim=input_dim))
@@ -135,6 +159,10 @@ bucket_name:    Name of the bucket to save confusion matrix. This location is st
 test_label:     The actual labels for the test data
 predict_label:  The labels predicted by the model/classifier
 test_acc:       The accuracy score for the batch predicted by the classifier
+
+Returns
+--------
+df_cm           Confusion Matrix dataframe
 
 '''
 def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
@@ -187,7 +215,14 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
 '''
 Loads the training and test data into dataframes
 
+Parameters
+----------
 bucket_name:        The bucket location where the input train and test files are stored
+
+Returns
+--------
+
+trainX, trainy, testX, testy   Parsed dataframes for train data, train labels, test data, test labels
 '''
 def load_data(bucket_name):
     # load dataset
@@ -219,10 +254,6 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     parser = parse_arguments()
-    args = parser.parse_known_args()[0]
-    
-    assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs) 
-    assert args.batch_size > 0, "Invalid batch size {} provided".format(args.batch_size)
-    
+    args = validate_arguments(parser)    
     print(args)
     train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib), args.optimizer_name)
