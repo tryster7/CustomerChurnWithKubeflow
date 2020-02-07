@@ -13,17 +13,15 @@ import argparse
 
 from sklearn.metrics import confusion_matrix
 
-from kubeflow.metadata import metadata
 from datetime import datetime
-from uuid import uuid4
 
 # Helper libraries
 import numpy as np
 
-METADATA_STORE_HOST = "metadata-grpc-service.kubeflow"  # default DNS of Kubeflow Metadata gRPC serivce.
-METADATA_STORE_PORT = 8080
-
-
+'''
+This functions parses the arguments provided. In case of missing arguments, it assigns
+default values to the arguments. 
+'''
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--bucket_name',
@@ -42,18 +40,41 @@ def parse_arguments():
                         type=int,
                         default=0,
                         help='to save model or not')
+    parser.add_argument('--optimizer_name',
+                        type=str,
+                        default='Adam',
+                        help='optimizer to use in model')
 
     args = parser.parse_known_args()[0]
+    
+    assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs) 
+    assert args.batch_size > 0, "Invalid batch size {} provided".format(args.batch_size)
+    
     return args
 
+'''
+This function involves reading the data from the bucket, 
+creating the model, 
+training the model,
+evaluating the model. 
+The various performance attributes of the model, like accuracy and confusion matrix are written 
+to the metadata store so that it can be visualized on kubeflow dashboard
+Input arguments
 
-def train(bucket_name, epochs=10, batch_size=128, katib=0):
-    #if katib == 0:
-        #metadata_exec = create_metadata_execution()
-
+Parameters 
+----------
+bucket_name:    The bucket and folder path where the input files are stored and the model will be exported
+epochs :        Epochs the model will be trained for 
+batch_size:     Batch Size (default is 128)
+katib:          This flag indicates whether this current execution is driven by katib. In case it is driven 
+                by katib, the metadata, model and confusion matrix need not be calculated/stored in google bucket
+'''
+def train(bucket_name, epochs, batch_size, katib, optimer_name):
+    
     testX, testy, trainX, trainy = load_data(bucket_name)
+    
     dnn = create_tfmodel(
-        optimizer=tf.optimizers.SGD(),
+        optimizer=tf.keras.optimizers.get(optimizer_name)
         loss='binary_crossentropy',
         metrics=['accuracy'],
         input_dim=trainX.shape[1])
@@ -69,17 +90,33 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     predictions = dnn.predict_classes(testX)
 
     if katib == 0:
-        #model = save_model_metadata(metadata_exec, batch_size, epochs)
-        #save_metric_metadata(metadata_exec, model, test_acc, test_loss)
         save_tfmodel_in_gcs(bucket_name, dnn)
         create_kf_visualization(bucket_name, testy, predictions, test_acc)
 
+'''
+Saves the model as a pb file
 
+Parameters:
+----------
+bucket_name:        The google bucket where the model will be exported/saved
+model:              The model to be exported/saved. 
+'''
 def save_tfmodel_in_gcs(bucket_name, model):
     export_path = bucket_name + '/export/model/1'
     tf.saved_model.save(model, export_dir=export_path)
+    
+'''
+Creates a tensor flow Dense Neural Networks Model. 
+A very basic model is created. 
 
+Parameters 
+----------
 
+optimizer:      The optimizer to be used for training the model
+loss:           The loss function to be used for optimizing the model
+metrics:        Metrics to be used for optimization
+input_dim:      The dimension of the input layer. Or we can say the number of attributes in the data file
+'''
 def create_tfmodel(optimizer, loss, metrics, input_dim):
     model = Sequential()
     model.add(Dense(input_dim, activation='relu', input_dim=input_dim))
@@ -88,7 +125,23 @@ def create_tfmodel(optimizer, loss, metrics, input_dim):
     model.compile(optimizer, loss, metrics)
     return model
 
+'''
+This method is used to create visualization for kubeflow. 
 
+The function stores confusion matrix and accuracy in json format to 
+/mlpipeline-ui-metadata and /mlpipeline-metrics file respectively. 
+
+Kubeflow picks these files and displays relevant visualization on the dashboard
+
+Parameters
+-----------
+bucket_name:    Name of the bucket to save confusion matrix. This location is stored in
+                mlpipeline-ui-metadata
+test_label:     The actual labels for the test data
+predict_label:  The labels predicted by the model/classifier
+test_acc:       The accuracy score for the batch predicted by the classifier
+
+'''
 def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
     metrics = {
         'metrics': [{
@@ -136,72 +189,11 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
 
     return df_cm
 
+'''
+Loads the training and test data into dataframes
 
-def save_metric_metadata(exec, model, test_acc, test_loss):
-    # Save evaluation
-    metrics = exec.log_output(
-        metadata.Metrics(
-            name="Customer_Churn_Evaluation",
-            description="Predicting customer churn from given data",
-            owner="demo@kubeflow.org",
-            uri="gs://kube-1122/customerchurn/metadata/cm.csv",
-            model_id=str(model.id),
-            metrics_type=metadata.Metrics.VALIDATION,
-            values={"accuracy": str(test_acc)},
-            labels={"mylabel": "l1"}))
-    print("Metrics id is %s" % metrics.id)
-
-
-def save_model_metadata(exec, batch_size, epochs):
-    # Save model;
-    model_version = "model_version_" + str(uuid4())
-    model = exec.log_output(
-        metadata.Model(
-            name="Customer_Churn",
-            description="model to predict customer churn",
-            owner="demo@kubeflow.org",
-            uri="gs://kube-1122/customerchurn/export/model/1/saved_model.pb",
-            model_type="DNN",
-            training_framework={
-                "name": "tensorflow",
-                "version": "v2.0"
-            },
-            hyperparameters={
-                "learning_rate": 0.5,
-                "layers": [11, 128, 1],
-                "epochs": str(epochs),
-                "batch-size": str(batch_size),
-                "early_stop": True
-            },
-            version=model_version,
-            labels={"tag": "train"}))
-    print(model)
-    print("\nModel id is {0.id} and version is {0.version}".format(model))
-    return model
-
-
-def create_metadata_execution():
-    global metadata
-    # Create Metadata Workspace and a Exec to log details
-    ws1 = metadata.Workspace(
-        # Connect to metadata service in namespace kubeflow in k8s cluster.
-        store=metadata.Store(grpc_host=METADATA_STORE_HOST, grpc_port=METADATA_STORE_PORT),
-        name="Customer Churn workspace",
-        description="a workspace for training customer churn model",
-        labels={"n1": "v1"})
-    run1 = metadata.Run(
-        workspace=ws1,
-        name="run-" + datetime.utcnow().isoformat("T"),
-        description="a run in ws_1")
-    exec = metadata.Execution(
-        name="execution" + datetime.utcnow().isoformat("T"),
-        workspace=ws1,
-        run=run1,
-        description="execution example")
-    print("An execution was created with id %s" % exec.id)
-    return exec
-
-
+bucket_name:        The bucket location where the input train and test files are stored
+'''
 def load_data(bucket_name):
     # load dataset
     train_file = bucket_name + '/output/train.csv'
@@ -221,12 +213,16 @@ def load_data(bucket_name):
     return testX, testy, trainX, trainy
 
 
+'''
+main function 
+
+'''
 if __name__ == '__main__':
     print("The arguments are ", str(sys.argv))
     if len(sys.argv) < 1:
-        print("Usage: train bucket-name epochs batch-size")
+        print("Usage: train bucket-name epochs batch-size katib optimizer")
         sys.exit(-1)
 
     args = parse_arguments()
     print(args)
-    train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib))
+    train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib), args.optimizer_name)
