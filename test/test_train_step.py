@@ -18,7 +18,7 @@ class MyTestCase(unittest.TestCase):
                                      input_dim=11)
         self.model = model
         self.bucket = 'gs://kube-1122/customerchurn'
-        self.model_path = '/workspace/model'
+        self.model_path = '/workspace'
         test_label = pd.Series([1, 0, 0, 1, 0, 1, 1, 1])
         self.testy = test_label
         pred_label = [1, 0, 1, 1, 0, 1, 0, 1]
@@ -28,7 +28,6 @@ class MyTestCase(unittest.TestCase):
     '''
     This test case checks for passed arguments to the step
     '''
-
     def test_validate_arguments(self):
         args = self.parser.parse_args(['--epochs', '-1', '--batch_size', '-2'])
         with self.assertRaises(AssertionError):
@@ -42,17 +41,6 @@ class MyTestCase(unittest.TestCase):
     def test_model_optimizer_and_loss(self):
         self.assertEquals(self.model.loss, 'binary_crossentropy')
         self.assertIn('Adam', self.model.optimizer.get_config().values())
-
-    '''
-    This test case loads the pre-saved model from gs and performs basic testing
-    '''
-    def test_loadmodel(self):
-        # first we will save the model
-        train.save_tfmodel_in_gcs(self.model_path, self.model)
-        # now load the model back to perform basic testing
-        model = tf.saved_model.load(self.model_path)
-        # checks the layers in the saved model
-        self.assertEquals(len(model.layers), 3)
 
     '''
     This test case check the total layers in model
