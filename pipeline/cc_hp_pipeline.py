@@ -49,13 +49,11 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
                          output_data_dir='output_dir',
                          model_dir='gs://your-bucket/export',
                          model_name='dummy',
-                         server_name='dummy',
-                         goal=.92):
+                         server_name='dummy'):
     objectiveConfig = {
         "type": "maximize",
-        "goal": goal,
-        "objectiveMetricName": "accuracy",
-        "additionalMetricNames": ["test-loss"]
+        "goal": 0.95,
+        "objectiveMetricName": "accuracy"
     }
     algorithmConfig = {"algorithmName": "random"}
     parameters = [
@@ -151,7 +149,10 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
     for step in steps:
         step.apply(gcp.use_gcp_secret('user-gcp-sa'))
 
-    train.after(preprocess)
+        
+    hptune.after(preprocess)
+    op2.after(hptune)
+    train.after(op2)
     serve.after(train)
 
 
