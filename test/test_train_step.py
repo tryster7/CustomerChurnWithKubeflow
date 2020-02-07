@@ -18,7 +18,7 @@ class MyTestCase(unittest.TestCase):
                                      input_dim=11)
         self.model = model
         self.bucket = 'gs://kube-1122/customerchurn'
-        self.model_path = '/workspace/model/1'
+        self.model_path = '/workspace/model'
         test_label = pd.Series([1, 0, 0, 1, 0, 1, 1, 1])
         self.testy = test_label
         pred_label = [1, 0, 1, 1, 0, 1, 0, 1]
@@ -46,7 +46,6 @@ class MyTestCase(unittest.TestCase):
     '''
     This test case loads the pre-saved model from gs and performs basic testing
     '''
-
     def test_loadmodel(self):
         # first we will save the model
         train.save_tfmodel_in_gcs(self.model_path, self.model)
@@ -54,16 +53,6 @@ class MyTestCase(unittest.TestCase):
         model = tf.saved_model.load(self.model_path)
         # checks the layers in the saved model
         self.assertEquals(len(model.layers), 3)
-
-    '''
-    This test case will test the visualization files created by train step to show metrics 
-    on kubeflow dashboard
-    '''
-
-    def test_create_visualization(self):
-        df_cm = train.create_kf_visualization(self.bucket, self.testy, self.pred, 0.85)
-        self.assertTrue(True, Path(self.bucket + '/metadata/cm.csv').is_file())
-        self.assertTrue(True, Path('/mlpipeline-metrics.json').is_file())
 
     '''
     This test case check the total layers in model
