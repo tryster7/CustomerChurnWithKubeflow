@@ -44,13 +44,8 @@ def parse_arguments():
                         type=str,
                         default='Adam',
                         help='optimizer to use in model')
-
-    args = parser.parse_known_args()[0]
     
-    assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs) 
-    assert args.batch_size > 0, "Invalid batch size {} provided".format(args.batch_size)
-    
-    return args
+    return parser
 
 '''
 This function involves reading the data from the bucket, 
@@ -223,6 +218,11 @@ if __name__ == '__main__':
         print("Usage: train bucket-name epochs batch-size katib optimizer")
         sys.exit(-1)
 
-    args = parse_arguments()
+    parser = parse_arguments()
+    args = parser.parse_known_args()[0]
+    
+    assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs) 
+    assert args.batch_size > 0, "Invalid batch size {} provided".format(args.batch_size)
+    
     print(args)
     train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib), args.optimizer_name)
