@@ -48,8 +48,8 @@ def parse_arguments():
 
 
 def train(bucket_name, epochs=10, batch_size=128, katib=0):
-    if katib == 0:
-        metadata_exec = create_metadata_execution()
+    #if katib == 0:
+        #metadata_exec = create_metadata_execution()
 
     testX, testy, trainX, trainy = load_data(bucket_name)
     dnn = create_tfmodel(
@@ -69,8 +69,8 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
     predictions = dnn.predict_classes(testX)
 
     if katib == 0:
-        model = save_model_metadata(metadata_exec, batch_size, epochs)
-        save_metric_metadata(metadata_exec, model, test_acc, test_loss)
+        #model = save_model_metadata(metadata_exec, batch_size, epochs)
+        #save_metric_metadata(metadata_exec, model, test_acc, test_loss)
         save_tfmodel_in_gcs(bucket_name, dnn)
         create_kf_visualization(bucket_name, testy, predictions, test_acc)
 
