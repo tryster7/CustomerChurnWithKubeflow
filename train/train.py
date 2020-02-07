@@ -52,18 +52,13 @@ This method will parse the arguments passed and validate them
 
 Parameters
 ----------
-parser          Parser object
-
-Returns 
--------
 args            Parsed arguments
 
 '''
-def validate_arguments(parser):
-    args = parser.parse_known_args()[0]
+def validate_arguments(args):
+    
     assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs) 
     assert args.batch_size > 0, "Invalid batch size {} provided".format(args.batch_size)
-    return args
     
 '''
 This function involves reading the data from the bucket, 
@@ -254,6 +249,7 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     parser = parse_arguments()
-    args = validate_arguments(parser)    
+    args = parser.parse_known_args()[0]
+    validate_arguments(args)    
     print(args)
     train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib), args.optimizer_name)
