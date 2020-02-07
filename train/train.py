@@ -53,7 +53,7 @@ def train(bucket_name, epochs=10, batch_size=128, katib=0):
 
     testX, testy, trainX, trainy = load_data(bucket_name)
     dnn = create_tfmodel(
-        optimizer=tf.optimizers.Adam(),
+        optimizer=tf.optimizers.SGD(),
         loss='binary_crossentropy',
         metrics=['accuracy'],
         input_dim=trainX.shape[1])
