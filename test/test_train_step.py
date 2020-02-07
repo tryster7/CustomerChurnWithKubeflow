@@ -18,7 +18,7 @@ class MyTestCase(unittest.TestCase):
                                      input_dim=11)
         self.model = model
         self.bucket = 'gs://kube-1122/customerchurn'
-        self.model_path = '/workspace'
+        self.model_path = '/workspace/model/1'
         test_label = pd.Series([1, 0, 0, 1, 0, 1, 1, 1])
         self.testy = test_label
         pred_label = [1, 0, 1, 1, 0, 1, 0, 1]
@@ -30,7 +30,7 @@ class MyTestCase(unittest.TestCase):
     '''
 
     def test_validate_arguments(self):
-        args = self.parser.parse_args(['--epochs', -1, '--batch_size', -2])
+        args = self.parser.parse_args(['--epochs', '-1', '--batch_size', '-2'])
         with self.assertRaises(AssertionError):
             train.validate_arguments(args)
 
