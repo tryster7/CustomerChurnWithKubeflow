@@ -77,7 +77,7 @@ batch_size:     Batch Size (default is 128)
 katib:          This flag indicates whether this current execution is driven by katib. In case it is driven 
                 by katib, the metadata, model and confusion matrix need not be calculated/stored in google bucket
 '''
-def train(bucket_name, epochs, batch_size, katib, optimer_name):
+def train(bucket_name, epochs, batch_size, katib, optimizer_name):
     
     testX, testy, trainX, trainy = load_data(bucket_name)
     
