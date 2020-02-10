@@ -6,10 +6,10 @@ from google.cloud import storage
 
 
 def get_prediction(server_host='127.0.0.1', server_port=8500, model_name='ccd'):
-    testX = pd.read_csv("gs://kube-1122/customerchurn/output/test.csv")
+    testX = pd.read_csv("gs://kbc/ccc/output/test.csv")
     testX = testX.drop(testX.columns[0], axis=1)
     print(testX.head())
-    testy = pd.read_csv("gs://kube-1122/customerchurn/output/test_label.csv")
+    testy = pd.read_csv("gs://kbc/ccc/output/test_label.csv")
     testy = testy.drop(testy.columns[0], axis=1)
     print("test labels ...\n" , testy.head())
     data = json.dumps({"signature_name": "serving_default", "instances": testX[0:5].values.tolist()})
