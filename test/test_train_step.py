@@ -17,7 +17,7 @@ class MyTestCase(unittest.TestCase):
                                      metrics=['accuracy'],
                                      input_dim=11)
         self.model = model
-        self.bucket = 'gs://kube-1122/customerchurn'
+        self.bucket = 'gs://kbc/ccc'
         self.model_path = '/workspace'
         test_label = pd.Series([1, 0, 0, 1, 0, 1, 1, 1])
         self.testy = test_label
