@@ -26,7 +26,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--bucket_name',
                         type=str,
-                        default='gs://kube-1122/customerchurn',
+                        default='gs://kbc/ccc',
                         help='The bucket where the model has to be stored')
     parser.add_argument('--epochs',
                         type=int,
