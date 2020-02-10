@@ -43,7 +43,7 @@ def customer_churn_pipeline(gs_bucket='gs://your-bucket/export',
     ]
     preprocess = dsl.ContainerOp(
         name='preprocess',
-        image='gcr.io/kube-2020/customerchurn/preprocess:latest',
+        image='gcr.io/poc-07022020/customerchurn/preprocess:latest',
         arguments=preprocess_args
     )
     train_args = [
@@ -53,7 +53,7 @@ def customer_churn_pipeline(gs_bucket='gs://your-bucket/export',
     ]
     train = dsl.ContainerOp(
         name='train',
-        image='gcr.io/kube-2020/customerchurn/train:latest',
+        image='gcr.io/poc-07022020/customerchurn/train:latest',
         arguments=train_args
     )
     serve_args = [
@@ -63,7 +63,7 @@ def customer_churn_pipeline(gs_bucket='gs://your-bucket/export',
     ]
     serve = dsl.ContainerOp(
         name='serve',
-        image='gcr.io/kube-2020/customerchurn/serve:latest',
+        image='gcr.io/poc-07022020/customerchurn/serve:latest',
         arguments=serve_args
     )
     steps = [preprocess, train, serve]
