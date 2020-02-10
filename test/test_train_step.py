@@ -17,15 +17,23 @@ class MyTestCase(unittest.TestCase):
                                      metrics=['accuracy'],
                                      input_dim=11)
         self.model = model
-        self.bucket = 'gs://kbc/ccc'
-        self.model_export_path = 'gs://kbc/ccc/export/model/1'
-        self.model_path = '/workspace'
+        self.bucket = 'gs://kbc/ccc'     
+        self.model_path = 'gs://kbc/ccc/test'
         test_label = pd.Series([1, 0, 0, 1, 0, 1, 1, 1])
         self.testy = test_label
         pred_label = [1, 0, 1, 1, 0, 1, 0, 1]
         self.pred = pred_label
         self.parser = train.parse_arguments()
 
+    '''
+    This test case saves model in a test path and then loads the model from same path and inspects it
+    '''
+    def test_save_and_load_model(self):
+        train.save_tfmodel_in_gcs(self.model_path, self.model)
+        self.assertTrue(tf.saved_model.contains_saved_model(self.model_path))
+        model = tf.saved_model.load(self.model_path)
+        self.assertIsNotNone(list(model.signatures.keys()))
+      
     '''
     This test case checks for passed arguments to the step
     '''
@@ -41,13 +49,6 @@ class MyTestCase(unittest.TestCase):
     def test_model_optimizer_and_loss(self):
         self.assertEquals(self.model.loss, 'binary_crossentropy')
         self.assertIn('Adam', self.model.optimizer.get_config().values())
-
-    '''
-    This test case loads the model from gs bucket and do a basic sanity test
-    '''
-    def test_loadmodel(self):
-        model = tf.saved_model.load(self.model_export_path)
-        self.assertIsNotNone(model)
 
     '''
     This test case check the total layers in model
