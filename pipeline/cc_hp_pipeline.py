@@ -73,7 +73,7 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
                     "restartPolicy": "Never",
                     "containers": [
                         {"name": "{{.Trial}}",
-                         "image": "gcr.io/kube-2020/customerchurn/train:latest",
+                         "image": "gcr.io/poc-07022020/customerchurn/train:latest",
                          "command": [
                              "python /train.py --katib=1 {{- with .HyperParameters}} {{- range .}} {{.Name}}={{"
                              ".Value}} {{- end}} {{- end}} "
@@ -113,8 +113,9 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
 
     convert_op = func_to_container_op(convert_hp_results)
     op2 = convert_op(hptune.output)
-    print(op2.output)
-
+    hp = "".join(op2.output)
+    print(type(hp))
+    print(hp)
     preprocess_args = [
         '--bucket_name', gs_bucket,
         '--input_file', input_data_file,
@@ -122,7 +123,7 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
     ]
     preprocess = dsl.ContainerOp(
         name='preprocess',
-        image='gcr.io/kube-2020/customerchurn/preprocess:latest',
+        image='gcr.io/poc-07022020/customerchurn/preprocess:latest',
         arguments=preprocess_args
     )
     train_args = [
@@ -132,7 +133,7 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
     ]
     train = dsl.ContainerOp(
         name='train',
-        image='gcr.io/kube-2020/customerchurn/train:latest',
+        image='gcr.io/poc-07022020/customerchurn/train:latest',
         arguments=train_args
     )
     serve_args = [
@@ -142,7 +143,7 @@ def cc_churn_hp_pipeline(gs_bucket='gs://your-bucket/export',
     ]
     serve = dsl.ContainerOp(
         name='serve',
-        image='gcr.io/kube-2020/customerchurn/serve:latest',
+        image='gcr.io/poc-07022020/customerchurn/serve:latest',
         arguments=serve_args
     )
     steps = [preprocess, train, serve, hptune]
