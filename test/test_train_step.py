@@ -30,7 +30,7 @@ class MyTestCase(unittest.TestCase):
     '''
     def test_save_and_load_model(self):
         train.save_tfmodel_in_gcs(self.model_path, self.model)
-        self.assertTrue(tf.saved_model.contains_saved_model(self.model_path))
+        self.assertTrue(True,tf.saved_model.contains_saved_model(self.model_path))
         model = tf.saved_model.load(self.model_path)
         self.assertIsNotNone(list(model.signatures.keys()))
       
