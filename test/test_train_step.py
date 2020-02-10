@@ -47,7 +47,7 @@ class MyTestCase(unittest.TestCase):
     '''
     def test_loadmodel(self):
         model = tf.saved_model.load(self.model_export_path)
-        self.assertEquals(len(self.model.layers), 3) 
+        self.assertEquals(len(model.layers), 3) 
 
     '''
     This test case check the total layers in model
