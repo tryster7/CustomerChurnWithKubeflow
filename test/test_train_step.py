@@ -12,26 +12,30 @@ class MyTestCase(unittest.TestCase):
     This method will setup mock data for running different test cases
     """
     def setUp(self) -> None:
+        # create a dummy model for test purpose
         model = train.create_tfmodel(optimizer=tf.optimizers.Adam(),
                                      loss='binary_crossentropy',
                                      metrics=['accuracy'],
                                      input_dim=11)
         self.model = model
-        self.bucket = 'gs://kbc/ccc'     
+        # GS base path for i/o files
+        self.bucket = 'gs://kbc/ccc'
+        # GS path for saving model
         self.model_path = 'gs://kbc/ccc/test'
-        test_label = pd.Series([1, 0, 0, 1, 0, 1, 1, 1])
-        self.testy = test_label
-        pred_label = [1, 0, 1, 1, 0, 1, 0, 1]
-        self.pred = pred_label
+        # parses argument to run train step
         self.parser = train.parse_arguments()
 
     '''
     This test case saves model in a test path and then loads the model from same path and inspects it
     '''
     def test_save_and_load_model(self):
+        # save the model in given model_path
         train.save_tfmodel_in_gcs(self.model_path, self.model)
+        # assert that saved model is recognized as valid file
         self.assertTrue(True,tf.saved_model.contains_saved_model(self.model_path))
-        model = tf.saved_model.load(self.model_path)
+        # load the model back from the model_path
+        model = tf.saved_model.load(self.model_path+'/export/model/1')
+        # do a basic test on the model
         self.assertIsNotNone(list(model.signatures.keys()))
       
     '''
