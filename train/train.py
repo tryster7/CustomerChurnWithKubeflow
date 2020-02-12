@@ -83,8 +83,8 @@ def train(bucket_name, epochs, batch_size, katib, optimizer_name):
     
     dnn = create_tfmodel(
         # optimizer=tf.keras.optimizers.get(optimizer_name),
-        optimizer=tf.keras.optimizers.get('SGD'),     
-        # optimizer=tf.keras.optimizers.get('Adam'),
+        # optimizer=tf.keras.optimizers.get('SGD'),     
+        optimizer=tf.keras.optimizers.get('Adam'),
         loss='binary_crossentropy',
         metrics=['accuracy'],
         input_dim=trainX.shape[1])
