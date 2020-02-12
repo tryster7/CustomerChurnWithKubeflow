@@ -1,0 +1,48 @@
+---
+apiVersion: kubeflow.org/v1
+kind: TFJob
+metadata:
+  name: ach-1-tf
+  namespace: kubeflow
+spec:
+  tfReplicaSpecs:
+    Chief:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+            - command:
+                - python
+                - /train.py
+                - "--batch_size=40"
+                - "--epochs=20"
+              image: "gcr.io/poc-07022020/dist/dist-train"
+              imagePullPolicy: Always
+              name: tensorflow
+    PS:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+            - command:
+                - python
+                - /train.py
+                - "--batch_size=40"
+                - "--epochs=20"
+              image: "gcr.io/poc-07022020/dist/dist-train"
+              name: tensorflow
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+            - command:
+                - python
+                - /train.py
+                - "--batch_size=40"
+                - "--epochs=20"
+              image: "gcr.io/poc-07022020/dist/dist-train"
+              name: tensorflow

@@ -1,0 +1,18 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: CACHE-DOCKER-IMAGE
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker pull gcr.io/$PROJECT_ID/dist/dist-train || exit 0
+  - name: 'gcr.io/cloud-builders/docker'
+    id: BUILD-DOCKER-IMAGE
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/dist/dist-train'
+      - '--cache-from'
+      - 'gcr.io/$PROJECT_ID/dist/dist-train'
+      - 'train/'
+images: ['gcr.io/$PROJECT_ID/dist/dist-train']

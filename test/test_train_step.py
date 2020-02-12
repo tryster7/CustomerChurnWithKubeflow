@@ -1,9 +1,8 @@
 import unittest
 
-import pandas as pd
 import tensorflow as tf
+
 from train import train
-from pathlib import Path
 
 
 class MyTestCase(unittest.TestCase):
@@ -36,6 +35,7 @@ class MyTestCase(unittest.TestCase):
         # load the model back from the model_path
         model = tf.saved_model.load(self.model_path+'/export/model/1')
         # do a basic test on the model
+        print('model signature keys=', list(model.signatures.keys()))
         self.assertIsNotNone(list(model.signatures.keys()))
       
     '''
