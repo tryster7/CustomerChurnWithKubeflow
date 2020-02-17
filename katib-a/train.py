@@ -16,7 +16,9 @@ import numpy as np
 
 ARGS = None
 
-
+"""
+parse the arguments passed while running the train code
+"""
 def parse_arguments():
     parser = argparse.ArgumentParser()
 
