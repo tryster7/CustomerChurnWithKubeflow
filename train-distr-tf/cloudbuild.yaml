@@ -1,18 +1,26 @@
 steps:
+  - name: 'python:3.7-slim'
+    id: COMPILE-IPNYB
+    entrypoint: /bin/sh
+    args:
+      - '-c'
+      - 'jupyter nbconvert --to script train-distr-tf/dist-tf-train.ipnyb && ls /workspace'
   - name: 'gcr.io/cloud-builders/docker'
     id: CACHE-DOCKER-IMAGE
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        docker pull gcr.io/$PROJECT_ID/dist/dist-train || exit 0
+        docker pull gcr.io/$PROJECT_ID/customerchurn/train-distr:latest || exit 0
+    waitFor:
+      - COMPILE-IPNYB
   - name: 'gcr.io/cloud-builders/docker'
     id: BUILD-DOCKER-IMAGE
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/dist/dist-train'
+      - 'gcr.io/$PROJECT_ID/customerchurn/train-distr:latest'
       - '--cache-from'
-      - 'gcr.io/$PROJECT_ID/dist/dist-train'
+      - 'gcr.io/$PROJECT_ID/customerchurn/train-distr:latest'
       - 'train/'
-images: ['gcr.io/$PROJECT_ID/dist/dist-train']
+images: ['gcr.io/$PROJECT_ID/customerchurn/train-distr:latest']
