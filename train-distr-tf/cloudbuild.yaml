@@ -4,7 +4,7 @@ steps:
     entrypoint: /bin/sh
     args:
       - '-c'
-      - 'jupyter nbconvert --to script train-distr-tf/dist-tf-train.ipnyb && ls /workspace'
+      - 'pip install notebook --user && jupyter nbconvert --to script train-distr-tf/dist-tf-train.ipnyb && ls /workspace'
   - name: 'gcr.io/cloud-builders/docker'
     id: CACHE-DOCKER-IMAGE
     entrypoint: 'bash'
