@@ -15,4 +15,4 @@ steps:
       - '--cache-from'
       - 'gcr.io/$PROJECT_ID/customerchurn/preprocess:latest'
       - 'preprocess/'
-images: ['gcr.io/$PROJECT_ID/customerchurn/preprocess:latest']
+images: ['gcr.io/$PROJECT_ID/customerchurn/preprocess']
