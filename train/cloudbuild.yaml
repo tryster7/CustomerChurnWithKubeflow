@@ -21,7 +21,7 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/customerchurn/train:latest'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/customerchurn/train:latest'
+      - 'gcr.io/$PROJECT_ID/customerchurn/train:$SHORT_SHA'
       - '--cache-from'
       - 'gcr.io/$PROJECT_ID/customerchurn/train:latest'
       - 'train/'
