@@ -10,6 +10,8 @@ steps:
       - 'build'
       - '-t'
       - 'gcr.io/$PROJECT_ID/customerchurn/preprocess:latest'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/customerchurn/preprocess:$SHORT_SHA'
       - '--cache-from'
       - 'gcr.io/$PROJECT_ID/customerchurn/preprocess:latest'
       - 'preprocess/'
