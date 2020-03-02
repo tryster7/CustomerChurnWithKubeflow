@@ -1,27 +1,24 @@
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Flatten, Dense
-from tensorflow.python.lib.io import file_io
-import pathlib
-
-import sys
-import json
-import pandas as pd
-import os
 import argparse
-
-from sklearn.metrics import confusion_matrix
-
+import json
+import sys
 from datetime import datetime
+from uuid import uuid4
 
-# Helper libraries
-import numpy as np
+import pandas as pd
+import tensorflow as tf
+from sklearn.metrics import confusion_matrix
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.python.lib.io import file_io
+
+from elasticsearch_utils import elasticsearch_writer as es_writer
 
 '''
 This functions parses the arguments provided. In case of missing arguments, it assigns
 default values to the arguments. 
 '''
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--bucket_name',
@@ -40,12 +37,17 @@ def parse_arguments():
                         type=int,
                         default=0,
                         help='to save model or not')
+    parser.add_argument('--enable_metadata',
+                        type=int,
+                        default=1,
+                        help='to write metadata to elasticsearch')
     parser.add_argument('--optimizer_name',
                         type=str,
                         default='Adam',
                         help='optimizer to use in model')
-    
+
     return parser
+
 
 '''
 This method will parse the arguments passed and validate them
@@ -55,11 +57,13 @@ Parameters
 args            Parsed arguments
 
 '''
+
+
 def validate_arguments(args):
-    
-    assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs) 
+    assert args.epochs > 0, "Invalid epoch {} provided".format(args.epochs)
     assert args.batch_size > 0, "Invalid batch size {} provided".format(args.batch_size)
-    
+
+
 '''
 This function involves reading the data from the bucket, 
 creating the model, 
@@ -77,14 +81,13 @@ batch_size:     Batch Size (default is 128)
 katib:          This flag indicates whether this current execution is driven by katib. In case it is driven 
                 by katib, the metadata, model and confusion matrix need not be calculated/stored in google bucket
 '''
-def train(bucket_name, epochs, batch_size, katib, optimizer_name):
-    
+
+
+def train(bucket_name, epochs, batch_size, katib, enable_metadata, optimizer_name):
     testX, testy, trainX, trainy = load_data(bucket_name)
-    
+
     dnn = create_tfmodel(
-        # optimizer=tf.keras.optimizers.get(optimizer_name),
-        optimizer=tf.keras.optimizers.get('SGD'),     
-        # optimizer=tf.keras.optimizers.get('Adam'),
+        optimizer=tf.keras.optimizers.get(optimizer_name),
         loss='binary_crossentropy',
         metrics=['accuracy'],
         input_dim=trainX.shape[1])
@@ -101,7 +104,84 @@ def train(bucket_name, epochs, batch_size, katib, optimizer_name):
 
     if katib == 0:
         save_tfmodel_in_gcs(bucket_name, dnn)
-        create_kf_visualization(bucket_name, testy, predictions, test_acc)
+        conf_matrix = create_kf_visualization(bucket_name, testy, predictions, test_acc)
+
+    # connect to elasticsearch and write metadata
+    if enable_metadata == 1:
+        # prepare metadata
+        METADATA = {
+            "timestamp": datetime.utcnow().isoformat("T"),
+            "name": "Customer Churn execution",
+            "description": "CustomerChurn model execution",
+            "dataset": {
+                "name": "customer_churn",
+                "description": "customer churn",
+                "uri": "gs://poc-07022020/output/train.csv",
+                "version": "dataset-" + str(uuid4()),
+                "owner": "Demo",
+                "query": ""
+            },
+            "model": {
+                "name": "CustomerChurn",
+                "description": "Customer Churn DNN",
+                "uri": "",
+                "version": "model-" + str(uuid4()),
+                "owner": "Demo",
+                "model_type": "DNN",
+                "training_framework": {
+                    "name": "tensorflow",
+                    "version": "2.0"
+                },
+                "hyperparamters": {
+                    "learning_rate": 0.5,
+                    "layers": [11, 128, 1],
+                    "early_stop": True,
+                    "epochs": epochs,
+                    "optimizer": optimizer_name,
+                    "attributes": [{
+                        "name": "batch_size",
+                        "value": batch_size
+                    }]
+                },
+                "labels": [{
+                    "name": "env",
+                    "value": "dev"
+                }]
+            },
+            "metric": {
+                "name": "Customer Churn evaluation metric",
+                "description": "",
+                "uri": "/metadata/cm.csv",
+                "version": "metric-" + str(uuid4()),
+                "owner": "Demo",
+                "metric_type": "Validation",
+                "data": [{
+                    "name": "accuracy",
+                    "value": [test_acc]
+                }, {
+                    "name": "test loss",
+                    "value": [test_loss]
+                }, {
+                    "name": "confusion_matrix",
+                    "value": [conf_matrix.to_string()]
+                }],
+                "labels": [{
+                    "name": "env",
+                    "value": "demo"
+                }]
+            }
+        }
+
+        write_metadata_to_es(metadata=METADATA)
+
+
+def write_metadata_to_es(metadata):
+    es_index = 'kf_metadata'
+    _es = es_writer.connect_elasticsearch(host='146.148.57.195', port=9200)
+    es_writer.create_index(elastic_object=_es, index_name=es_index)
+    result = es_writer.store_record(elastic_object=_es, index_name=es_index, record=metadata)
+    print("Metadata saved with result ", result)
+
 
 '''
 Saves the model as a pb file
@@ -111,10 +191,13 @@ Parameters:
 bucket_name:        The google bucket where the model will be exported/saved
 model:              The model to be exported/saved. 
 '''
+
+
 def save_tfmodel_in_gcs(bucket_name, model):
     export_path = bucket_name + '/export/model/1'
     tf.saved_model.save(model, export_dir=export_path)
-    
+
+
 '''
 Creates a tensor flow Dense Neural Networks Model. 
 A very basic model is created. 
@@ -141,6 +224,7 @@ def create_tfmodel(optimizer, loss, metrics, input_dim):
     model.compile(optimizer, loss, metrics)
     return model
 
+
 '''
 This method is used to create visualization for kubeflow. 
 
@@ -162,6 +246,8 @@ Returns
 df_cm           Confusion Matrix dataframe
 
 '''
+
+
 def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
     metrics = {
         'metrics': [{
@@ -209,6 +295,7 @@ def create_kf_visualization(bucket_name, test_label, predict_label, test_acc):
 
     return df_cm
 
+
 '''
 Loads the training and test data into dataframes
 
@@ -221,6 +308,8 @@ Returns
 
 trainX, trainy, testX, testy   Parsed dataframes for train data, train labels, test data, test labels
 '''
+
+
 def load_data(bucket_name):
     # load dataset
     train_file = bucket_name + '/output/train.csv'
@@ -252,6 +341,7 @@ if __name__ == '__main__':
 
     parser = parse_arguments()
     args = parser.parse_known_args()[0]
-    validate_arguments(args)    
+    validate_arguments(args)
     print(args)
-    train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib), args.optimizer_name)
+    train(args.bucket_name, int(args.epochs), int(args.batch_size), int(args.katib), int(args.enable_metadata),
+          args.optimizer_name)
