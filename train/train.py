@@ -11,7 +11,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.python.lib.io import file_io
 
-from elasticsearch_utils import elasticsearch_writer as es_writer
+import elasticsearch_writer as es_writer
 
 '''
 This functions parses the arguments provided. In case of missing arguments, it assigns
@@ -178,7 +178,7 @@ def train(bucket_name, epochs, batch_size, katib, enable_metadata, optimizer_nam
 def write_metadata_to_es(metadata):
     es_index = 'kf_metadata'
     _es = es_writer.connect_elasticsearch(host='146.148.57.195', port=9200)
-    es_writer.create_index(elastic_object=_es, index_name=es_index)
+    es_writer.create_index(_es, index_name=es_index)
     result = es_writer.store_record(elastic_object=_es, index_name=es_index, record=metadata)
     print("Metadata saved with result ", result)
 
