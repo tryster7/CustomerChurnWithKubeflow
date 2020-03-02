@@ -1,0 +1,73 @@
+{
+  "timestamp": "2020-01-01T12:10:30Z",
+  "name": "kf metadata",
+  "description": "desc",
+  "dataset": {
+    "name": "mnist dataset",
+    "description": "mnist dataset",
+    "uri": "",
+    "version": "v1",
+    "owner": "xkcd",
+    "query": ""
+  },
+  "model": {
+    "name": "mnist model",
+    "description": "dataset name",
+    "uri": "",
+    "version": "v1",
+    "owner": "xkcd",
+    "model_type": "DNN",
+    "training_framework": {
+      "name": "tensorflow",
+      "version": "2.0"
+    },
+    "hyperparamters": {
+      "learning_rate": 0.5,
+      "layers": [
+        28,
+        11,
+        1
+      ],
+      "early_stop": true,
+      "epochs": 20,
+      "optimizer": "Adam"
+    },
+    "labels": [
+      {
+        "name": "",
+        "value": ""
+      }
+    ]
+  },
+  "metric": {
+    "name": "mnist evaluation metric",
+    "description": "mnist",
+    "uri": "",
+    "version": "v1.0",
+    "owner": "xkcd",
+    "metric_type": "DNN",
+    "data": [
+      {
+        "name": "accuracy",
+        "value": [
+          "0.95"
+        ]
+      },
+      {
+        "name": "confusion_matrix",
+        "value": [
+          "1200",
+          "232",
+          "123",
+          "500"
+        ]
+      }
+    ],
+    "labels": [
+      {
+        "name": "AUC_Curve",
+        "value": "0.89"
+      }
+    ]
+  }
+}
