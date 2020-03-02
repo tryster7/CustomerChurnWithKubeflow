@@ -11,7 +11,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.python.lib.io import file_io
 
-import elasticsearch_writer as es_writer
+from elasticsearch_utils import elasticsearch_writer as es_writer
 
 '''
 This functions parses the arguments provided. In case of missing arguments, it assigns
