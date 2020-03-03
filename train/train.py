@@ -14,7 +14,7 @@ from tensorflow.python.lib.io import file_io
 from elasticsearch import Elasticsearch
 
 '''
-Functions provide elasticsearch writing capabilities to train step
+Functions provide elasticsearch writing capabilities to train step , later to seperate it out
 '''
 
 def connect_elasticsearch(host='127.0.0.1', port=9200):
