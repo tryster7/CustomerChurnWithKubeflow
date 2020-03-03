@@ -11,6 +11,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.python.lib.io import file_io
 
+from elasticsearch import Elasticsearch
 
 '''
 Functions provide elasticsearch writing capabilities to train step
