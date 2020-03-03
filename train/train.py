@@ -514,15 +514,15 @@ def train(bucket_name, epochs, batch_size, katib, enable_metadata, optimizer_nam
             "dataset": {
                 "name": "customer_churn",
                 "description": "customer churn",
-                "uri": "gs://poc-07022020/output/train.csv",
+                "uri": "gs://kbc/ccc/output/train.csv",
                 "version": "dataset-" + str(uuid4()),
                 "owner": "Demo",
                 "query": ""
             },
             "model": {
-                "name": "CustomerChurn",
+                "name": "CustomerChurn DNN",
                 "description": "Customer Churn DNN",
-                "uri": "",
+                "uri": "gs://kbc/ccc/export/model",
                 "version": "model-" + str(uuid4()),
                 "owner": "Demo",
                 "model_type": "DNN",
@@ -555,10 +555,10 @@ def train(bucket_name, epochs, batch_size, katib, enable_metadata, optimizer_nam
                 "metric_type": "Validation",
                 "data": [{
                     "name": "accuracy",
-                    "value": [test_acc]
+                    "value": [str(test_acc)]
                 }, {
                     "name": "test loss",
-                    "value": [test_loss]
+                    "value": [str(test_loss)]
                 }, {
                     "name": "confusion_matrix",
                     "value": [conf_matrix.to_string()]
